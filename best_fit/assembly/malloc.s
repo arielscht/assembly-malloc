@@ -72,9 +72,7 @@ finalizaAlocador:
 liberaMem:                              
     pushq %rbp
     movq %rsp, %rbp
-    movq %rdi, %rbx                 # %rbx := block
-    subq $16, %rbx                      # %rbx := block - 16 := &(occupied byte)
-    movq $0, (%rbx)                     # occupied byte := 0
+    movq $0, -16(%rdi)                     # occupied byte := 0
     movq $0, %rax                       # return 0
     popq %rbp                    
     ret
@@ -100,16 +98,16 @@ alocaMem:
     movq %r14, -32(%rbp)                # Save %r14
     movq %r15, -40(%rbp)                # Save %r15
 
-    movq %rdi, %r14                # $r14 := bytes
+    movq %rdi, %r14                     # $r14 := bytes
 
-    movq INITIAL_BRK, %rbx               # %rbx := INITIAL_BRK
+    movq INITIAL_BRK, %rbx              # %rbx := INITIAL_BRK
     movq $0, %rdi                       # %rdi := 0
     movq $BRK_SERVICE, %rax             # Set the service to brk
     syscall
     movq %rax, %r8                      # %r8 := brk(0)
     movq $0, %r9                        # %r9 := 0 := NULL
     movq $0, %r10                       # %r10 := 0
-    movq LOGICAL_HEAP_END, %r11        # %r11 := logical_heap_end
+    movq LOGICAL_HEAP_END, %r11         # %r11 := logical_heap_end
     
 
 alloc_while:
