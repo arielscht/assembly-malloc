@@ -5,31 +5,30 @@ int main()
 {
     iniciaAlocador();
 
-    void *mem1 = alocaMem(16);
+    void *mem1 = alocaMem(32);
     imprimeMapa();
 
     void *mem2 = alocaMem(64);
     imprimeMapa();
 
-    liberaMem(mem2);
-    imprimeMapa();
-
-    void *mem6 = alocaMem(30);
-
-    void *mem3 = alocaMem(3952);
+    void *mem3 = alocaMem(32);
     imprimeMapa();
 
     void *mem4 = alocaMem(64);
     imprimeMapa();
 
-    void *mem5 = alocaMem(4001);
+    liberaMem(mem1);
     imprimeMapa();
 
-    liberaMem(mem1);
     liberaMem(mem3);
+    imprimeMapa();
+
+    liberaMem(mem2);
+    imprimeMapa();
+
     liberaMem(mem4);
-    liberaMem(mem5);
-    liberaMem(mem6);
+    imprimeMapa();
+
     finalizaAlocador();
     return 0;
 }

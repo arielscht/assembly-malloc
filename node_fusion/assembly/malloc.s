@@ -69,10 +69,77 @@ finalizaAlocador:
 
 # Frees the memory of the given pointer
 # int liberaMem(void *block)
+# %rbx -> addr
+# %r8 -> heap_end
+# %r9 -> initial_block
+# %r10 -> new_size
+# %r11 -> blocks_count
+# %r12 -> should_update_logical_end
+# %r13 -> logical_heap_end
+# %r14 -> 
+# %r15 -> 
 liberaMem:                              
     pushq %rbp
     movq %rsp, %rbp
-    movq $0, -16(%rdi)                     # occupied byte := 0
+    movq $0, -16(%rdi)                  # occupied byte := 0
+
+    movq INITIAL_BRK, %rbx              # %rbx := INITIAL_BRK
+    movq LOGICAL_HEAP_END, %r13         # %r13 := LOGICAL_HEAP_END
+
+    movq $0, %rdi                       # %rdi := 0
+    movq $BRK_SERVICE, %rax             # Set the service to brk
+    syscall
+    movq %rax, %r8                      # %r8 := brk(0)
+
+    movq $0, %r10                       # new_size = 0
+    movq $0, %r11                       # blocks_count = 0
+    movq $0, %rcx                       # should_update_logical_end = 0
+
+free_while:
+    cmpq %r13, %rbx                     
+    jg end_free_while                   # Jumps to loop end
+        movq (%rbx), %r14               # is_occupied;
+        movq 8(%rbx), %r15
+        
+        cmpq $0, %r14                   # Check if block is occupied
+        jne occupied_else
+            cmpq $0, %r10               # Check if new_size is zero
+            jne new_size_else
+                movq %rbx, %r9          # initial_block = addr
+                addq 8(%rbx), %r10      # new_size += block_size
+                jmp new_size_if_end
+new_size_else:
+                addq 8(%rbx), %r10      # new_size += block_size
+                addq $16, %r10          # new_size += 16
+new_size_if_end:
+logical_heap_if:
+            cmpq %rbx, %r13             # Check addr == logical_heap_end
+            jne end_logical_heap_if
+                movq $1, %rcx           # should_update_logical = 1
+end_logical_heap_if:
+            addq $1, %r11               # blocks_count += 1;
+            jmp occupied_if_end
+occupied_else:
+            cmpq $1, %r11               # check if blocks_count
+            jg end_free_while
+                movq $0, %r11
+                movq $0, %r10
+
+occupied_if_end:
+    addq 8(%rbx), %rbx          # rbx += block_size
+    addq $16, %rbx              # rbx += 16
+    jmp free_while
+
+end_free_while:
+if_block_count:
+    cmpq $1, %r11
+    jle end_free_func
+        movq %r10, 8(%r9)
+        cmpq $1, %rcx
+        jne end_free_func
+            movq %r9, LOGICAL_HEAP_END
+
+end_free_func:
     movq $0, %rax                       # return 0
     popq %rbp                    
     ret
@@ -264,4 +331,3 @@ end_print_while:
     addq $24, %rsp
     popq %rbp
     ret
-    
